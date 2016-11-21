@@ -5,21 +5,28 @@ import axios from 'axios';
 import { createStore, combineReducers, applyMiddleware } from "redux";
 import { Provider, connect } from 'react-redux';
 import thunk from 'redux-thunk';
+import update from 'react-addons-update';
 
-var initialState = {
+
+//initial state for tasks dataset
+var tasksInitialState = {
     numberOfTasks: 0,
     tasks: []
 }
 
-const tasksReducer = (state=initialState, action) => {
+const tasksReducer = (state=tasksInitialState, action) => {
     if (action.type === "ADD") {
-        state = {...state, numberOfTasks: state.numberOfTasks + action.payload}
+        state = {
+            ...state, 
+            numberOfTasks: state.numberOfTasks + action.payload, 
+            tasks: [...state.tasks, action.newTask]
+            }
     }
     if (action.type === "DEC") {
         state = {...state, numberOfTasks: state.numberOfTasks - action.payload}
     }
     if (action.type === "TASKS_RECEIVED") {
-        state = {...state, tasks: action.payload}
+        state = {...state, tasks: action.payload, numberOfTasks: action.payload.length}
     }
     if (action.type === "FETCHING_FAILED") {
         state = {...state, tasks: action.payload}
@@ -27,23 +34,24 @@ const tasksReducer = (state=initialState, action) => {
     return state;
 }
 
+//not sure what this is for yet
 const otherReducer = (state={}, action) => {
     return state;
 }
 
-
+//allows us have one store while calling on one reducer dependent on the data set being augmented
 const reducers = combineReducers({
     tasks: tasksReducer,
     other: otherReducer
 })
 
-//redux's state
+
 const middleware = applyMiddleware(thunk);
 const germzFirstStore = createStore(reducers, middleware);
 
 //triggers on change of store
 germzFirstStore.subscribe(() => {
-    console.log("number of tasks:");
+    console.log("change happened");
 })
 
 
@@ -52,7 +60,6 @@ function fetchTasks(){
     return function(dispatch){
         axios.get("api/v1/loadtasks")
             .then((response) => {
-                console.log(response.data);
                 dispatch({type: "TASKS_RECEIVED", payload: response.data})
             })
             .catch((err) => {
@@ -65,14 +72,8 @@ function fetchTasks(){
 
 
 
-
-
 class Lander extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-        };
-    }
+
     render() {
     	return(
     		<div>
@@ -109,9 +110,6 @@ class Toolbar extends React.Component {
     }
 })
 class TaskBoard extends React.Component {
-    constructor(props) {
-        super(props);
-    }
 
 componentWillMount() {
     this.props.dispatch(fetchTasks());
@@ -123,17 +121,16 @@ componentWillMount() {
         };
         axios.post('api/v1/newtask', taskData)
         .then((response) => {
-            germzFirstStore.dispatch({type: "ADD", payload: 1})
+            germzFirstStore.dispatch({type: "ADD", payload: 1, newTask: taskData})
         });
     }
 
     render() {
 
-
         if(this.props.taskList.tasks !== null) {
             var loopTasks = this.props.taskList.tasks.map((tasksEntered) => {
                 return (
-                    <div>{tasksEntered.task}</div>
+                    <div className="taskBox">{tasksEntered.task}</div>
                 );
             });
         } else {
@@ -150,14 +147,14 @@ componentWillMount() {
                 </form>
                 <div className="columnContainer">
                     <div className="scrumColumn">
-                        <h4>To Do: {this.props.taskList.numberOfTasks}</h4>
+                        <div className="columnHeader">To Do: {this.props.taskList.numberOfTasks}</div>
                         {loopTasks}
                     </div>
                     <div className="scrumColumn">
-                        <h4>In Progress</h4>
+                        <div className="columnHeader">In Progress</div>
                     </div>
                     <div className="scrumColumn">
-                        <h4>Complete</h4>
+                        <div className="columnHeader">Complete</div>
                     </div>
                 </div>
 			</div>
@@ -167,11 +164,7 @@ componentWillMount() {
 
 
 class Settings extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-        };
-    }
+
     render() {
     	return(
 			<div className="headerBox">
@@ -182,11 +175,7 @@ class Settings extends React.Component {
 }
 
 class Layout extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-        };
-    }
+
     render() {
         return(
             <div>
