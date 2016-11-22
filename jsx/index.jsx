@@ -18,7 +18,7 @@ const tasksReducer = (state=tasksInitialState, action) => {
         state = {
             ...state, 
             tasks: [...state.tasks, action.newTask]
-            }
+        }
     }
     if (action.type === "DEC") {
         state = {...state, numberOfToDo: state.numberOfToDo - action.payload}
@@ -138,7 +138,8 @@ componentDidMount() {
         };
         axios.post('api/v1/newtask', taskData)
         .then((response) => {
-            germzFirstStore.dispatch({type: "ADD", payload: 1, newTask: taskData})
+            germzFirstStore.dispatch({type: "ADD", newTask: taskData})
+            console.log("here");
         });
     }
 
@@ -149,48 +150,33 @@ componentDidMount() {
     }
 
     var toDoTasks = this.props.taskList.tasks.filter(toDoStatus);
+    var loopToDo = toDoTasks.map((tasksEntered) => {
+        return (
+            <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+        );
+    });
 
     function inProgressStatus(value) {
         return value.taskstatus === "inProgress";
     }
 
     var inProgressTasks = this.props.taskList.tasks.filter(inProgressStatus);
+    var loopInProgress = inProgressTasks.map((tasksEntered) => {
+        return (
+            <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+        );
+    });
 
     function completeStatus(value) {
         return value.taskstatus === "complete";
     }
 
     var completeTasks = this.props.taskList.tasks.filter(completeStatus);
-
-        if(toDoTasks !== null) {
-            var loopToDo = toDoTasks.map((tasksEntered) => {
-                return (
-                    <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
-                );
-            });
-        } else {
-            var loopPosts = <div>No more posts!</div>
-        }
-
-        if(inProgressTasks !== null) {
-            var loopInProgress = inProgressTasks.map((tasksEntered) => {
-                return (
-                    <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
-                );
-            });
-        } else {
-            var loopPosts = <div>No more posts!</div>
-        }
-
-        if(completeTasks !== null) {
-            var loopComplete = completeTasks.map((tasksEntered) => {
-                return (
-                    <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
-                );
-            });
-        } else {
-            var loopPosts = <div>No more posts!</div>
-        }
+    var loopComplete = completeTasks.map((tasksEntered) => {
+        return (
+            <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+        );
+    });
 
 
     	return(
@@ -202,15 +188,15 @@ componentDidMount() {
                 </form>
                 <div className="columnContainer">
                     <div className="scrumColumn">
-                        <div className="columnHeader">To Do: {this.props.taskList.tasks.length}</div>
+                        <div className="columnHeader">To Do: {toDoTasks.length}</div>
                         <div ref="toDo" id="toDo" className="container toDo">{loopToDo}</div>
                     </div>
                     <div className="scrumColumn">
-                        <div className="columnHeader">In Progress: {this.props.taskList.numberOfInProgress}</div>
+                        <div className="columnHeader">In Progress: {inProgressTasks.length}</div>
                         <div ref="inProgress" id="inProgress" className="container inProgress">{loopInProgress}</div>
                     </div>
                     <div className="scrumColumn">
-                        <div className="columnHeader">Complete: {this.props.taskList.numberOfComplete}</div>
+                        <div className="columnHeader">Complete: {completeTasks.length}</div>
                         <div ref="complete" id="complete" className="container complete">{loopComplete}</div>
                     </div>
                 </div>
