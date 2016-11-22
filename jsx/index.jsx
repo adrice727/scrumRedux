@@ -10,7 +10,6 @@ import Dragula from 'react-dragula';
 
 //initial state for tasks dataset
 var tasksInitialState = {
-    numberOfTasks: 0,
     tasks: []
 }
 
@@ -18,15 +17,14 @@ const tasksReducer = (state=tasksInitialState, action) => {
     if (action.type === "ADD") {
         state = {
             ...state, 
-            numberOfTasks: state.numberOfTasks + action.payload, 
             tasks: [...state.tasks, action.newTask]
             }
     }
     if (action.type === "DEC") {
-        state = {...state, numberOfTasks: state.numberOfTasks - action.payload}
+        state = {...state, numberOfToDo: state.numberOfToDo - action.payload}
     }
     if (action.type === "TASKS_RECEIVED") {
-        state = {...state, tasks: action.payload, numberOfTasks: action.payload.length}
+        state = {...state, tasks: action.payload}
     }
     if (action.type === "FETCHING_FAILED") {
         state = {...state, tasks: action.payload}
@@ -60,6 +58,7 @@ function fetchTasks(){
     return function(dispatch){
         axios.get("api/v1/loadtasks")
             .then((response) => {
+                console.log(response.data[0].taskstatus);
                 dispatch({type: "TASKS_RECEIVED", payload: response.data})
             })
             .catch((err) => {
@@ -145,8 +144,26 @@ componentDidMount() {
 
     render() {
 
-        if(this.props.taskList.tasks !== null) {
-            var loopTasks = this.props.taskList.tasks.map((tasksEntered) => {
+    function toDoStatus(value) {
+        return value.taskstatus === "toDo";
+    }
+
+    var toDoTasks = this.props.taskList.tasks.filter(toDoStatus);
+
+    function inProgressStatus(value) {
+        return value.taskstatus === "inProgress";
+    }
+
+    var inProgressTasks = this.props.taskList.tasks.filter(inProgressStatus);
+
+    function completeStatus(value) {
+        return value.taskstatus === "complete";
+    }
+
+    var completeTasks = this.props.taskList.tasks.filter(completeStatus);
+
+        if(toDoTasks !== null) {
+            var loopToDo = toDoTasks.map((tasksEntered) => {
                 return (
                     <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
                 );
@@ -155,7 +172,25 @@ componentDidMount() {
             var loopPosts = <div>No more posts!</div>
         }
 
+        if(inProgressTasks !== null) {
+            var loopInProgress = inProgressTasks.map((tasksEntered) => {
+                return (
+                    <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+                );
+            });
+        } else {
+            var loopPosts = <div>No more posts!</div>
+        }
 
+        if(completeTasks !== null) {
+            var loopComplete = completeTasks.map((tasksEntered) => {
+                return (
+                    <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+                );
+            });
+        } else {
+            var loopPosts = <div>No more posts!</div>
+        }
 
 
     	return(
@@ -167,16 +202,16 @@ componentDidMount() {
                 </form>
                 <div className="columnContainer">
                     <div className="scrumColumn">
-                        <div className="columnHeader">To Do: {this.props.taskList.numberOfTasks}</div>
-                        <div ref="toDo" id="toDo" className="container toDo">{loopTasks}</div>
+                        <div className="columnHeader">To Do: {this.props.taskList.tasks.length}</div>
+                        <div ref="toDo" id="toDo" className="container toDo">{loopToDo}</div>
                     </div>
                     <div className="scrumColumn">
-                        <div className="columnHeader">In Progress</div>
-                        <div ref="inProgress" id="inProgress" className="container inProgress"></div>
+                        <div className="columnHeader">In Progress: {this.props.taskList.numberOfInProgress}</div>
+                        <div ref="inProgress" id="inProgress" className="container inProgress">{loopInProgress}</div>
                     </div>
                     <div className="scrumColumn">
-                        <div className="columnHeader">Complete</div>
-                        <div ref="complete" id="complete" className="container complete"></div>
+                        <div className="columnHeader">Complete: {this.props.taskList.numberOfComplete}</div>
+                        <div ref="complete" id="complete" className="container complete">{loopComplete}</div>
                     </div>
                 </div>
 			</div>
