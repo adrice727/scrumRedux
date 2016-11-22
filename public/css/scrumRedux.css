@@ -16,6 +16,12 @@
 	margin-right: 50px;
 }
 
+.container {
+	background-color: blue;
+	height: 200px;
+	width: 200px;
+}
+
 .scrumColumn {
     box-sizing:border-box;
     -moz-box-sizing:border-box;

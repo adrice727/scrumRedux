@@ -5,7 +5,7 @@ import axios from 'axios';
 import { createStore, combineReducers, applyMiddleware } from "redux";
 import { Provider, connect } from 'react-redux';
 import thunk from 'redux-thunk';
-import update from 'react-addons-update';
+import Dragula from 'react-dragula';
 
 
 //initial state for tasks dataset
@@ -115,6 +115,13 @@ componentWillMount() {
     this.props.dispatch(fetchTasks());
 }
 
+componentDidMount() {
+    var container1 = ReactDOM.findDOMNode(this.refs.container1);
+    var container2 = ReactDOM.findDOMNode(this.refs.container2);
+    var container3 = ReactDOM.findDOMNode(this.refs.container3);
+    Dragula([container1, container2, container3]);
+  }
+
     addTask() {
         const taskData = {
             task: ReactDOM.findDOMNode(this.refs.taskInput).value,
@@ -138,6 +145,8 @@ componentWillMount() {
         }
 
 
+
+
     	return(
 			<div className="headerBox">
                 <div className="headerTitle">Nothing</div>
@@ -148,19 +157,24 @@ componentWillMount() {
                 <div className="columnContainer">
                     <div className="scrumColumn">
                         <div className="columnHeader">To Do: {this.props.taskList.numberOfTasks}</div>
-                        {loopTasks}
+                        <div ref="container1" className="container container1">{loopTasks}</div>
                     </div>
                     <div className="scrumColumn">
                         <div className="columnHeader">In Progress</div>
+                        <div ref="container2" className="container container2"></div>
                     </div>
                     <div className="scrumColumn">
                         <div className="columnHeader">Complete</div>
+                        <div ref="container3" className="container container3"></div>
                     </div>
                 </div>
 			</div>
     	)
     }
 }
+
+
+
 
 
 class Settings extends React.Component {
