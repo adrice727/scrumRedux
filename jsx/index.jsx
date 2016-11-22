@@ -116,10 +116,21 @@ componentWillMount() {
 }
 
 componentDidMount() {
-    var container1 = ReactDOM.findDOMNode(this.refs.container1);
-    var container2 = ReactDOM.findDOMNode(this.refs.container2);
-    var container3 = ReactDOM.findDOMNode(this.refs.container3);
-    Dragula([container1, container2, container3]);
+    var toDo = ReactDOM.findDOMNode(this.refs.toDo);
+    var inProgress = ReactDOM.findDOMNode(this.refs.inProgress);
+    var complete = ReactDOM.findDOMNode(this.refs.complete);
+    Dragula([toDo, inProgress, complete])
+        .on("drop", function(el, container) {
+            console.log(container.id);
+        var taskData = {
+            taskid: el.id,
+            taskstatus: container.id
+        }
+        axios.post('api/v1/taskstatus', taskData)
+        .then((response) => {
+            console.log("suck sess");
+        });
+        });
   }
 
     addTask() {
@@ -137,7 +148,7 @@ componentDidMount() {
         if(this.props.taskList.tasks !== null) {
             var loopTasks = this.props.taskList.tasks.map((tasksEntered) => {
                 return (
-                    <div className="taskBox">{tasksEntered.task}</div>
+                    <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
                 );
             });
         } else {
@@ -157,15 +168,15 @@ componentDidMount() {
                 <div className="columnContainer">
                     <div className="scrumColumn">
                         <div className="columnHeader">To Do: {this.props.taskList.numberOfTasks}</div>
-                        <div ref="container1" className="container container1">{loopTasks}</div>
+                        <div ref="toDo" id="toDo" className="container toDo">{loopTasks}</div>
                     </div>
                     <div className="scrumColumn">
                         <div className="columnHeader">In Progress</div>
-                        <div ref="container2" className="container container2"></div>
+                        <div ref="inProgress" id="inProgress" className="container inProgress"></div>
                     </div>
                     <div className="scrumColumn">
                         <div className="columnHeader">Complete</div>
-                        <div ref="container3" className="container container3"></div>
+                        <div ref="complete" id="complete" className="container complete"></div>
                     </div>
                 </div>
 			</div>
