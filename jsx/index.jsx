@@ -10,15 +10,24 @@ import Dragula from 'react-dragula';
 
 //initial state for tasks dataset
 var tasksInitialState = {
-    tasks: []
+    tasks: [],
+    toDoLength: 0,
+    inProgressLength: 0,
+    completeLength: 0
 }
 
 const tasksReducer = (state=tasksInitialState, action) => {
     if (action.type === "ADD") {
-        state = {
-            ...state, 
-            tasks: [...state.tasks, action.newTask]
-        }
+        state = {...state, tasks: [...state.tasks, action.newTask]}
+    }
+    if (action.type === "ADD_TODO_COUNTER") {
+        state = {...state, toDoLength: state.toDoLength + action.payload}
+    }
+    if (action.type === "ADD_INPROGRESS_COUNTER") {
+        state = {...state, inProgressLength: state.inProgressLength + action.payload}
+    }
+    if (action.type === "ADD_COMPLETE_COUNTER") {
+        state = {...state, completeLength: state.completeLength + action.payload}
     }
     if (action.type === "DEC") {
         state = {...state, numberOfToDo: state.numberOfToDo - action.payload}
@@ -58,8 +67,24 @@ function fetchTasks(){
     return function(dispatch){
         axios.get("api/v1/loadtasks")
             .then((response) => {
-                console.log(response.data[0].taskstatus);
                 dispatch({type: "TASKS_RECEIVED", payload: response.data})
+                var toDo = 0;
+                var inProgress = 0;
+                var complete = 0;
+                response.data.map((tasksEntered) => {
+                    if(tasksEntered.taskstatus === "toDo"){
+                        toDo = toDo + 1;
+                    }
+                    else if(tasksEntered.taskstatus === "inProgress"){
+                        inProgress = inProgress + 1;
+                    }
+                    else if(tasksEntered.taskstatus === "complete"){
+                        complete = complete + 1;
+                    }
+                })
+                dispatch({type: "ADD_TODO_COUNTER", payload: toDo})
+                dispatch({type: "ADD_INPROGRESS_COUNTER", payload: inProgress})
+                dispatch({type: "ADD_COMPLETE_COUNTER", payload: complete})
             })
             .catch((err) => {
                 dispatch({type: "FETCHING_FAILED", payload: err})
@@ -67,8 +92,20 @@ function fetchTasks(){
     }
 }
 
-
-
+function addCounter(taskType){
+    var taskType = taskType;
+    return function(dispatch) {
+        if(taskType === "toDo"){
+            dispatch({type: "ADD_TODO_COUNTER", payload: 1})
+        }
+        else if(taskType === "inProgress"){
+            dispatch({type: "ADD_INPROGRESS_COUNTER", payload: 1})
+        }
+        else if(taskType === "complete"){
+            dispatch({type: "ADD_COMPLETE_COUNTER", payload: 1})
+        }                
+    }
+}
 
 
 class Lander extends React.Component {
@@ -118,19 +155,20 @@ componentDidMount() {
     var toDo = ReactDOM.findDOMNode(this.refs.toDo);
     var inProgress = ReactDOM.findDOMNode(this.refs.inProgress);
     var complete = ReactDOM.findDOMNode(this.refs.complete);
+    var self = this;
     Dragula([toDo, inProgress, complete])
         .on("drop", function(el, container) {
-            console.log(container.id);
         var taskData = {
             taskid: el.id,
             taskstatus: container.id
         }
         axios.post('api/v1/taskstatus', taskData)
         .then((response) => {
-            console.log("suck sess");
+            self.props.dispatch(addCounter(taskData.taskstatus));
         });
         });
   }
+
 
     addTask() {
         const taskData = {
@@ -138,8 +176,7 @@ componentDidMount() {
         };
         axios.post('api/v1/newtask', taskData)
         .then((response) => {
-            germzFirstStore.dispatch({type: "ADD", newTask: taskData})
-            console.log("here");
+            this.props.dispatch(fetchTasks());
         });
     }
 
@@ -188,15 +225,15 @@ componentDidMount() {
                 </form>
                 <div className="columnContainer">
                     <div className="scrumColumn">
-                        <div className="columnHeader">To Do: {toDoTasks.length}</div>
+                        <div className="columnHeader">To Do: {this.props.taskList.toDoLength}</div>
                         <div ref="toDo" id="toDo" className="container toDo">{loopToDo}</div>
                     </div>
                     <div className="scrumColumn">
-                        <div className="columnHeader">In Progress: {inProgressTasks.length}</div>
+                        <div className="columnHeader">In Progress: {this.props.taskList.inProgressLength}</div>
                         <div ref="inProgress" id="inProgress" className="container inProgress">{loopInProgress}</div>
                     </div>
                     <div className="scrumColumn">
-                        <div className="columnHeader">Complete: {completeTasks.length}</div>
+                        <div className="columnHeader">Complete: {this.props.taskList.completeLength}</div>
                         <div ref="complete" id="complete" className="container complete">{loopComplete}</div>
                     </div>
                 </div>
