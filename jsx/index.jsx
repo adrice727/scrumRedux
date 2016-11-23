@@ -29,8 +29,14 @@ const tasksReducer = (state=tasksInitialState, action) => {
     if (action.type === "ADD_COMPLETE_COUNTER") {
         state = {...state, completeLength: state.completeLength + action.payload}
     }
-    if (action.type === "DEC") {
-        state = {...state, numberOfToDo: state.numberOfToDo - action.payload}
+    if (action.type === "DEC_TODO_COUNTER") {
+        state = {...state, toDoLength: state.toDoLength - action.payload}
+    }
+    if (action.type === "DEC_INPROGRESS_COUNTER") {
+        state = {...state, inProgressLength: state.inProgressLength - action.payload}
+    }
+    if (action.type === "DEC_COMPLETE_COUNTER") {
+        state = {...state, completeLength: state.completeLength - action.payload}
     }
     if (action.type === "TASKS_RECEIVED") {
         state = {...state, tasks: action.payload}
@@ -92,8 +98,7 @@ function fetchTasks(){
     }
 }
 
-function addCounter(taskType){
-    var taskType = taskType;
+function addCounter(taskType, sourceType){
     return function(dispatch) {
         if(taskType === "toDo"){
             dispatch({type: "ADD_TODO_COUNTER", payload: 1})
@@ -103,7 +108,17 @@ function addCounter(taskType){
         }
         else if(taskType === "complete"){
             dispatch({type: "ADD_COMPLETE_COUNTER", payload: 1})
-        }                
+        }    
+
+        if(sourceType === "toDo"){
+            dispatch({type: "DEC_TODO_COUNTER", payload: 1})
+        }
+        else if(sourceType === "inProgress"){
+            dispatch({type: "DEC_INPROGRESS_COUNTER", payload: 1})
+        }
+        else if(sourceType === "complete"){
+            dispatch({type: "DEC_COMPLETE_COUNTER", payload: 1})
+        }               
     }
 }
 
@@ -157,14 +172,15 @@ componentDidMount() {
     var complete = ReactDOM.findDOMNode(this.refs.complete);
     var self = this;
     Dragula([toDo, inProgress, complete])
-        .on("drop", function(el, container) {
+        .on("drop", function(el, container, source) {
         var taskData = {
+            tasksource: source.id,
             taskid: el.id,
             taskstatus: container.id
         }
         axios.post('api/v1/taskstatus', taskData)
         .then((response) => {
-            self.props.dispatch(addCounter(taskData.taskstatus));
+            self.props.dispatch(addCounter(taskData.taskstatus, taskData.tasksource));   
         });
         });
   }
