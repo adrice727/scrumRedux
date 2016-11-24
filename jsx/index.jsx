@@ -39,7 +39,13 @@ const tasksReducer = (state=tasksInitialState, action) => {
         state = {...state, completeLength: state.completeLength - action.payload}
     }
     if (action.type === "TASKS_RECEIVED") {
-        state = {...state, tasks: action.payload}
+        state = {
+            ...state, 
+            tasks: action.payload, 
+            toDoLength: action.toDoPayload,
+            inProgressLength: action.inProgressPayLoad,
+            completeLength: action.completePayload
+        }
     }
     if (action.type === "FETCHING_FAILED") {
         state = {...state, tasks: action.payload}
@@ -73,7 +79,6 @@ function fetchTasks(){
     return function(dispatch){
         axios.get("api/v1/loadtasks")
             .then((response) => {
-                dispatch({type: "TASKS_RECEIVED", payload: response.data})
                 var toDo = 0;
                 var inProgress = 0;
                 var complete = 0;
@@ -87,10 +92,14 @@ function fetchTasks(){
                     else if(tasksEntered.taskstatus === "complete"){
                         complete = complete + 1;
                     }
+                    dispatch({
+                        type: "TASKS_RECEIVED", 
+                        payload: response.data, 
+                        toDoPayload: toDo,
+                        inProgressPayLoad: inProgress,
+                        completePayload: complete
+                    })
                 })
-                dispatch({type: "ADD_TODO_COUNTER", payload: toDo})
-                dispatch({type: "ADD_INPROGRESS_COUNTER", payload: inProgress})
-                dispatch({type: "ADD_COMPLETE_COUNTER", payload: complete})
             })
             .catch((err) => {
                 dispatch({type: "FETCHING_FAILED", payload: err})
