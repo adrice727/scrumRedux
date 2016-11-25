@@ -6,6 +6,7 @@ import { createStore, combineReducers, applyMiddleware } from "redux";
 import { Provider, connect } from 'react-redux';
 import thunk from 'redux-thunk';
 import Dragula from 'react-dragula';
+import update from 'react-addons-update';
 
 
 //initial state for tasks dataset
@@ -17,6 +18,17 @@ var tasksInitialState = {
 }
 
 const tasksReducer = (state=tasksInitialState, action) => {
+
+    if (action.type === "CHANGE_STATUS") {
+        return update(state, {
+            tasks: {
+                [action.arrayPosition]: {
+                    taskstatus: {$set: action.status}
+                }
+            }
+        })
+        console.log(state.tasks);
+    }
     if (action.type === "ADD") {
         state = {...state, tasks: [...state.tasks, action.newTask]}
     }
@@ -92,13 +104,13 @@ function fetchTasks(){
                     else if(tasksEntered.taskstatus === "complete"){
                         complete = complete + 1;
                     }
-                    dispatch({
-                        type: "TASKS_RECEIVED", 
-                        payload: response.data, 
-                        toDoPayload: toDo,
-                        inProgressPayLoad: inProgress,
-                        completePayload: complete
-                    })
+                })
+                dispatch({
+                    type: "TASKS_RECEIVED",
+                    payload: response.data,
+                    toDoPayload: toDo,
+                    inProgressPayLoad: inProgress,
+                    completePayload: complete
                 })
             })
             .catch((err) => {
@@ -107,7 +119,7 @@ function fetchTasks(){
     }
 }
 
-function addCounter(taskType, sourceType){
+function addCounter(taskType, sourceType, arrayPosition){
     return function(dispatch) {
         if(taskType === "toDo"){
             dispatch({type: "ADD_TODO_COUNTER", payload: 1})
@@ -127,7 +139,8 @@ function addCounter(taskType, sourceType){
         }
         else if(sourceType === "complete"){
             dispatch({type: "DEC_COMPLETE_COUNTER", payload: 1})
-        }               
+        }
+        dispatch({type: "CHANGE_STATUS", status: taskType, arrayPosition: arrayPosition})               
     }
 }
 
@@ -189,7 +202,14 @@ componentDidMount() {
         }
         axios.post('api/v1/taskstatus', taskData)
         .then((response) => {
-            self.props.dispatch(addCounter(taskData.taskstatus, taskData.tasksource));   
+            for(i=0; i<self.props.taskList.tasks.length;i++){
+                var i = i;               
+                if(self.props.taskList.tasks[i].idtasks.toString() === taskData.taskid.toString()) {
+                    var arrayPosition = i;
+                    self.props.dispatch(addCounter(taskData.taskstatus, taskData.tasksource, arrayPosition));  
+                    break;
+                }
+            } 
         });
         });
   }
