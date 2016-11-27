@@ -6,7 +6,6 @@ import { createStore, combineReducers, applyMiddleware } from "redux";
 import { Provider, connect } from 'react-redux';
 import thunk from 'redux-thunk';
 import Dragula from 'react-dragula';
-import update from 'react-addons-update';
 
 
 //initial state for tasks dataset
@@ -18,40 +17,29 @@ var tasksInitialState = {
 }
 
 const tasksReducer = (state=tasksInitialState, action) => {
-
-    if (action.type === "CHANGE_STATUS") {
-        return update(state, {
-            tasks: {
-                [action.arrayPosition]: {
-                    taskstatus: {$set: action.status}
-                }
-            }
-        })
-        console.log(state.tasks);
-    }
     if (action.type === "ADD") {
-        state = {...state, tasks: [...state.tasks, action.newTask]}
+        return {...state, tasks: [...state.tasks, action.newTask]}
     }
     if (action.type === "ADD_TODO_COUNTER") {
-        state = {...state, toDoLength: state.toDoLength + action.payload}
+        return {...state, toDoLength: state.toDoLength + action.payload}
     }
     if (action.type === "ADD_INPROGRESS_COUNTER") {
-        state = {...state, inProgressLength: state.inProgressLength + action.payload}
+        return {...state, inProgressLength: state.inProgressLength + action.payload}
     }
     if (action.type === "ADD_COMPLETE_COUNTER") {
-        state = {...state, completeLength: state.completeLength + action.payload}
+        return {...state, completeLength: state.completeLength + action.payload}
     }
     if (action.type === "DEC_TODO_COUNTER") {
-        state = {...state, toDoLength: state.toDoLength - action.payload}
+        return {...state, toDoLength: state.toDoLength - action.payload}
     }
     if (action.type === "DEC_INPROGRESS_COUNTER") {
-        state = {...state, inProgressLength: state.inProgressLength - action.payload}
+        return {...state, inProgressLength: state.inProgressLength - action.payload}
     }
     if (action.type === "DEC_COMPLETE_COUNTER") {
-        state = {...state, completeLength: state.completeLength - action.payload}
+        return {...state, completeLength: state.completeLength - action.payload}
     }
     if (action.type === "TASKS_RECEIVED") {
-        state = {
+        return {
             ...state, 
             tasks: action.payload, 
             toDoLength: action.toDoPayload,
@@ -60,22 +48,21 @@ const tasksReducer = (state=tasksInitialState, action) => {
         }
     }
     if (action.type === "FETCHING_FAILED") {
-        state = {...state, tasks: action.payload}
+        return {...state, tasks: action.payload}
     }
     return state;
 }
 
-//not sure what this is for yet
-const otherReducer = (state={}, action) => {
+//will be used for header/navigation status
+const headerReducer = (state={}, action) => {
     return state;
 }
 
 //allows us have one store while calling on one reducer dependent on the data set being augmented
 const reducers = combineReducers({
     tasks: tasksReducer,
-    other: otherReducer
+    header: headerReducer
 })
-
 
 const middleware = applyMiddleware(thunk);
 const germzFirstStore = createStore(reducers, middleware);
@@ -85,9 +72,7 @@ germzFirstStore.subscribe(() => {
     console.log("change happened");
 })
 
-
 function fetchTasks(){
-
     return function(dispatch){
         axios.get("api/v1/loadtasks")
             .then((response) => {
@@ -119,7 +104,7 @@ function fetchTasks(){
     }
 }
 
-function addCounter(taskType, sourceType, arrayPosition){
+function addCounter(taskType, sourceType){
     return function(dispatch) {
         if(taskType === "toDo"){
             dispatch({type: "ADD_TODO_COUNTER", payload: 1})
@@ -139,8 +124,7 @@ function addCounter(taskType, sourceType, arrayPosition){
         }
         else if(sourceType === "complete"){
             dispatch({type: "DEC_COMPLETE_COUNTER", payload: 1})
-        }
-        dispatch({type: "CHANGE_STATUS", status: taskType, arrayPosition: arrayPosition})               
+        }               
     }
 }
 
@@ -202,14 +186,7 @@ componentDidMount() {
         }
         axios.post('api/v1/taskstatus', taskData)
         .then((response) => {
-            for(i=0; i<self.props.taskList.tasks.length;i++){
-                var i = i;               
-                if(self.props.taskList.tasks[i].idtasks.toString() === taskData.taskid.toString()) {
-                    var arrayPosition = i;
-                    self.props.dispatch(addCounter(taskData.taskstatus, taskData.tasksource, arrayPosition));  
-                    break;
-                }
-            } 
+            self.props.dispatch(addCounter(taskData.taskstatus, taskData.tasksource)); 
         });
         });
   }
@@ -263,7 +240,7 @@ componentDidMount() {
 
     	return(
 			<div className="headerBox">
-                <div className="headerTitle">Nothing</div>
+                <div className="headerTitle">Something</div>
                 <form>
                     <input ref="taskInput" className="inputTask" type="text" />
                     <button onClick={this.addTask.bind(this)} ref="taskSubmit" className="inputButton">Submit</button>

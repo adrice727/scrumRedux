@@ -2,7 +2,7 @@
 var path = require('path');
 var webpack = require('webpack');
 
-var BUILD_DIR = path.resolve(__dirname, '../scrumRedux/public/js');
+var BUILD_DIR = path.resolve(__dirname, '../scrumRedux/public/js/components');
 var APP_DIR = path.resolve(__dirname, '../scrumRedux/jsx');
 
 module.exports = {
