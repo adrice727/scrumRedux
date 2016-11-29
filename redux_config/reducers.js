@@ -1,3 +1,5 @@
+import { combineReducers } from "redux";
+
 export default function() {
 
 //initial state for tasks dataset

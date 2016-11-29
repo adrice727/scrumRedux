@@ -7,138 +7,20 @@ import { Provider, connect } from 'react-redux';
 import thunk from 'redux-thunk';
 import Dragula from 'react-dragula';
 
-
-//initial state for tasks dataset
-var tasksInitialState = {
-    tasks: [],
-    toDoLength: 0,
-    inProgressLength: 0,
-    completeLength: 0
-}
-
-const tasksReducer = (state=tasksInitialState, action) => {
-    if (action.type === "ADD") {
-        return {...state, tasks: [...state.tasks, action.newTask]}
-    }
-    if (action.type === "ADD_TODO_COUNTER") {
-        return {...state, toDoLength: state.toDoLength + action.payload}
-    }
-    if (action.type === "ADD_INPROGRESS_COUNTER") {
-        return {...state, inProgressLength: state.inProgressLength + action.payload}
-    }
-    if (action.type === "ADD_COMPLETE_COUNTER") {
-        return {...state, completeLength: state.completeLength + action.payload}
-    }
-    if (action.type === "DEC_TODO_COUNTER") {
-        return {...state, toDoLength: state.toDoLength - action.payload}
-    }
-    if (action.type === "DEC_INPROGRESS_COUNTER") {
-        return {...state, inProgressLength: state.inProgressLength - action.payload}
-    }
-    if (action.type === "DEC_COMPLETE_COUNTER") {
-        return {...state, completeLength: state.completeLength - action.payload}
-    }
-    if (action.type === "TASKS_RECEIVED") {
-        return {
-            ...state, 
-            tasks: action.payload, 
-            toDoLength: action.toDoPayload,
-            inProgressLength: action.inProgressPayLoad,
-            completeLength: action.completePayload
-        }
-    }
-    if (action.type === "FETCHING_FAILED") {
-        return {...state, tasks: action.payload}
-    }
-    return state;
-}
-
-//will be used for header/navigation status
-const headerReducer = (state={}, action) => {
-    return state;
-}
-
-//allows us have one store while calling on one reducer dependent on the data set being augmented
-const reducers = combineReducers({
-    tasks: tasksReducer,
-    header: headerReducer
-})
-
-const middleware = applyMiddleware(thunk);
-const germzFirstStore = createStore(reducers, middleware);
-
-//triggers on change of store
-germzFirstStore.subscribe(() => {
-    console.log("change happened");
-})
-
-function fetchTasks(){
-    return function(dispatch){
-        axios.get("api/v1/loadtasks")
-            .then((response) => {
-                var toDo = 0;
-                var inProgress = 0;
-                var complete = 0;
-                response.data.map((tasksEntered) => {
-                    if(tasksEntered.taskstatus === "toDo"){
-                        toDo = toDo + 1;
-                    }
-                    else if(tasksEntered.taskstatus === "inProgress"){
-                        inProgress = inProgress + 1;
-                    }
-                    else if(tasksEntered.taskstatus === "complete"){
-                        complete = complete + 1;
-                    }
-                })
-                dispatch({
-                    type: "TASKS_RECEIVED",
-                    payload: response.data,
-                    toDoPayload: toDo,
-                    inProgressPayLoad: inProgress,
-                    completePayload: complete
-                })
-            })
-            .catch((err) => {
-                dispatch({type: "FETCHING_FAILED", payload: err})
-            })
-    }
-}
-
-function addCounter(taskType, sourceType){
-    return function(dispatch) {
-        if(taskType === "toDo"){
-            dispatch({type: "ADD_TODO_COUNTER", payload: 1})
-        }
-        else if(taskType === "inProgress"){
-            dispatch({type: "ADD_INPROGRESS_COUNTER", payload: 1})
-        }
-        else if(taskType === "complete"){
-            dispatch({type: "ADD_COMPLETE_COUNTER", payload: 1})
-        }    
-
-        if(sourceType === "toDo"){
-            dispatch({type: "DEC_TODO_COUNTER", payload: 1})
-        }
-        else if(sourceType === "inProgress"){
-            dispatch({type: "DEC_INPROGRESS_COUNTER", payload: 1})
-        }
-        else if(sourceType === "complete"){
-            dispatch({type: "DEC_COMPLETE_COUNTER", payload: 1})
-        }               
-    }
-}
+import {fetchTasks, addCounter} from "../public/js/redux/actions.js";
+import store from "../public/js/redux/store.js"
 
 
 class Lander extends React.Component {
 
     render() {
-    	return(
-    		<div>
-    			<div className="tile">
-    			{this.props.children}
-				</div>
-    		</div>
-    	)
+        return(
+            <div>
+                <div className="tile">
+                {this.props.children}
+                </div>
+            </div>
+        )
     }
 }
 
@@ -161,9 +43,9 @@ class Toolbar extends React.Component {
 
 
 
-@connect((germzFirstStore) => {
+@connect((store) => {
     return {
-        taskList: germzFirstStore.tasks
+        taskList: store.tasks
     }
 })
 class TaskBoard extends React.Component {
@@ -181,7 +63,7 @@ componentDidMount() {
         .on("drop", function(el, container, source) {
         var taskData = {
             tasksource: source.id,
-            taskid: el.id,
+            taskid: el.getAttribute("data-id"),
             taskstatus: container.id
         }
         axios.post('api/v1/taskstatus', taskData)
@@ -211,7 +93,7 @@ componentDidMount() {
     var toDoTasks = this.props.taskList.tasks.filter(toDoStatus);
     var loopToDo = toDoTasks.map((tasksEntered) => {
         return (
-            <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+            <div data-id={tasksEntered.idtasks} id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
         );
     });
 
@@ -222,7 +104,7 @@ componentDidMount() {
     var inProgressTasks = this.props.taskList.tasks.filter(inProgressStatus);
     var loopInProgress = inProgressTasks.map((tasksEntered) => {
         return (
-            <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+            <div data-id={tasksEntered.idtasks} id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
         );
     });
 
@@ -233,13 +115,13 @@ componentDidMount() {
     var completeTasks = this.props.taskList.tasks.filter(completeStatus);
     var loopComplete = completeTasks.map((tasksEntered) => {
         return (
-            <div id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
+            <div data-id={tasksEntered.idtasks} id={tasksEntered.idtasks} className="taskBox">{tasksEntered.task}</div>
         );
     });
 
 
-    	return(
-			<div className="headerBox">
+        return(
+            <div className="headerBox">
                 <div className="headerTitle">Something</div>
                 <form>
                     <input ref="taskInput" className="inputTask" type="text" />
@@ -259,8 +141,8 @@ componentDidMount() {
                         <div ref="complete" id="complete" className="container complete">{loopComplete}</div>
                     </div>
                 </div>
-			</div>
-    	)
+            </div>
+        )
     }
 }
 
@@ -271,11 +153,11 @@ componentDidMount() {
 class Settings extends React.Component {
 
     render() {
-    	return(
-			<div className="headerBox">
-				<div className="headerTitle">Settings</div>
-			</div>
-    	)
+        return(
+            <div className="headerBox">
+                <div className="headerTitle">Settings</div>
+            </div>
+        )
     }
 }
 
@@ -298,6 +180,6 @@ class Layout extends React.Component {
 
 
 
-ReactDOM.render(<Provider store={germzFirstStore}>
+ReactDOM.render(<Provider store={store}>
                 <Layout />
                 </Provider>, document.getElementById('content'));

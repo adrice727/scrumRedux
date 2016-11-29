@@ -1,8 +1,6 @@
 import axios from "axios";
 
-export default function() {
-
-function fetchTasks(){
+export function fetchTasks(){
 
     return function(dispatch){
         axios.get("api/v1/loadtasks")
@@ -35,7 +33,7 @@ function fetchTasks(){
     }
 }
 
-function addCounter(taskType, sourceType){
+export function addCounter(taskType, sourceType){
     return function(dispatch) {
         if(taskType === "toDo"){
             dispatch({type: "ADD_TODO_COUNTER", payload: 1})
@@ -57,6 +55,4 @@ function addCounter(taskType, sourceType){
             dispatch({type: "DEC_COMPLETE_COUNTER", payload: 1})
         }               
     }
-}
-
 }
