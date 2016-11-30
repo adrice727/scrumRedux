@@ -1,20 +1,15 @@
 import {applyMiddleware, createStore, combineReducers} from "redux";
 import thunk from "redux-thunk";
 
-import configReducer from "./reducers";
+import reducers from "./reducers";
 
 
-const configureStore = () => {
+export default function configureStore(tasksInitialState) {
 
-	const middleware = applyMiddleware(thunk);
-	const store = createStore(configReducer, middleware);
+	return createStore(
+		reducers,
+		tasksInitialState,
+		applyMiddleware(thunk)
+		);
+	}
 
-	//triggers on change of store
-	store.subscribe(() => {
-	    console.log("change happened");
-	})
-
-	return store;
-}
-
-export default configureStore;
