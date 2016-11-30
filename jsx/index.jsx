@@ -8,7 +8,7 @@ import thunk from 'redux-thunk';
 import Dragula from 'react-dragula';
 
 import {fetchTasks, addCounter} from "../public/js/redux/actions.js";
-import store from "../public/js/redux/store.js"
+import configureStore from "../public/js/redux/store.js"
 
 
 class Lander extends React.Component {
@@ -43,9 +43,9 @@ class Toolbar extends React.Component {
 
 
 
-@connect((store) => {
+@connect((configureStore) => {
     return {
-        taskList: store.tasks
+        taskList: configureStore.tasks
     }
 })
 class TaskBoard extends React.Component {
@@ -180,6 +180,6 @@ class Layout extends React.Component {
 
 
 
-ReactDOM.render(<Provider store={store}>
+ReactDOM.render(<Provider store={configureStore()}>
                 <Layout />
                 </Provider>, document.getElementById('content'));

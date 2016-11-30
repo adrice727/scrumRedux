@@ -4,14 +4,17 @@ import thunk from "redux-thunk";
 import reducers from "./reducers";
 
 
-export default function() {
+	const configureStore = () => {
 
-const middleware = applyMiddleware(thunk);
-const store = createStore(reducers, middleware);
+	const middleware = applyMiddleware(thunk);
+	const store = createStore(reducers, middleware);
 
-//triggers on change of store
-store.subscribe(() => {
-    console.log("change happened");
-})
+	//triggers on change of store
+	store.subscribe(() => {
+	    console.log("change happened");
+	})
 
+	return store;
 }
+
+export default configureStore;
