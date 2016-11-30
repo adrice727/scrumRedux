@@ -43,9 +43,11 @@ class Toolbar extends React.Component {
 
 
 
-@connect((configureStore) => {
+const store = configureStore();
+
+@connect((store) => {
     return {
-        taskList: configureStore.tasks
+        taskList: store.tasks
     }
 })
 class TaskBoard extends React.Component {
@@ -180,6 +182,6 @@ class Layout extends React.Component {
 
 
 
-ReactDOM.render(<Provider store={configureStore()}>
+ReactDOM.render(<Provider store={store}>
                 <Layout />
                 </Provider>, document.getElementById('content'));

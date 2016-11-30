@@ -1,13 +1,13 @@
 import {applyMiddleware, createStore, combineReducers} from "redux";
 import thunk from "redux-thunk";
 
-import reducers from "./reducers";
+import configReducer from "./reducers";
 
 
-	const configureStore = () => {
+const configureStore = () => {
 
 	const middleware = applyMiddleware(thunk);
-	const store = createStore(reducers, middleware);
+	const store = createStore(configReducer, middleware);
 
 	//triggers on change of store
 	store.subscribe(() => {
